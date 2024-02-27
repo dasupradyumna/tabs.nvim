@@ -64,27 +64,30 @@ end
 ---@param prompt string prompt message for user input
 ---@return string # validated tabpage name
 function M.get_valid_name(current, prompt)
-  while true do
+  local ret
+  while not ret do
     -- display warning message (if any)
     vim.cmd 'redraw'
+    -- TEST: dressing.nvim override of vim.ui functions
     vim.api.nvim_echo({ { M.message, 'Warn' } }, false, {})
-    local ok, new_name = pcall(vim.fn.input, {
+    vim.ui.input({
       prompt = prompt,
       default = current,
-      cancelreturn = current,
       highlight = function(input)
         -- highlight characters beyond allowed length as an error
         if input:len() <= M.config.active.name_max_len then return {} end
         return { { M.config.active.name_max_len, input:len(), 'Error' } }
       end,
-    })
-
-    if not ok then
-      return current
-    elseif M.is_valid_name(new_name) then
-      return new_name
-    end
+    }, function(input)
+      if not input then
+        ret = current
+      elseif M.is_valid_name(input) then
+        ret = input
+      end
+    end)
   end
+
+  return ret
 end
 
 ---statusline component displaying the tabpage names and current tabpage indicator
