@@ -92,16 +92,21 @@ end
 
 ---statusline component displaying the tabpage names and current tabpage indicator
 ---@return string
+-- PERF: implement either caching or debouncing for better performance
 function M.status()
+  local curr = vim.api.nvim_tabpage_get_number(0)
+  local prev = vim.fn.tabpagenr '#'
   local ret = {}
-  local curr = vim.api.nvim_get_current_tabpage()
-  for _, tabpage in ipairs(vim.api.nvim_list_tabpages()) do
-    local comp = vim.t[tabpage].tabs_nvim_name or ''
-    comp = comp .. (curr == tabpage and '*' or '')
-    table.insert(ret, comp)
+  for i, tabpage in ipairs(vim.api.nvim_list_tabpages()) do
+    local name = vim.t[tabpage].tabs_nvim_name or ''
+    local fmt = '  %s  '
+    -- TODO: refactor highlight groups for user customization
+    fmt = i == curr and '%%#TabLineSel# [%d] %s %%*' or fmt
+    fmt = i == prev and '  [%d] %%#Underlined#%s%%*  ' or fmt
+    table.insert(ret, fmt:format(i, name))
   end
 
-  return table.concat(ret, ' | ')
+  return table.concat(ret)
 end
 
 return M
