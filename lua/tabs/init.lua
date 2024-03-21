@@ -99,7 +99,7 @@ function M.status()
   local ret = {}
   for i, tabpage in ipairs(vim.api.nvim_list_tabpages()) do
     local name = vim.t[tabpage].tabs_nvim_name or ''
-    local fmt = '  %s  '
+    local fmt = '  [%d] %s  '
     -- TODO: refactor highlight groups for user customization
     fmt = i == curr and '%%#TabLineSel# [%d] %s %%*' or fmt
     fmt = i == prev and '  [%d] %%#Underlined#%s%%*  ' or fmt
@@ -107,6 +107,20 @@ function M.status()
   end
 
   return table.concat(ret)
+end
+
+---save the current list of tabpage names to a global variable
+function M.save_to_global()
+  vim.g.TabsNvimNames = vim.json.encode(
+    vim.tbl_map(function(v) return vim.t[v].tabs_nvim_name or '' end, vim.api.nvim_list_tabpages())
+  )
+end
+
+---restore names for current tabpages from the saved global variable
+function M.load_from_global()
+  for tabpage, tabname in ipairs(vim.json.decode(vim.g.TabsNvimNames)) do
+    vim.t[tabpage].tabs_nvim_name = tabname
+  end
 end
 
 return M
