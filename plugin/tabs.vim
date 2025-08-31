@@ -12,7 +12,11 @@ augroup tabs_nvim
 
     " get tabpage name from user, only outside session loading
     autocmd TabNew * if !exists('g:SessionLoad') |
-                \        execute "lua require('tabs').set_name(true)" |
+                \        if !exists('g:tabs_nvim_no_prompt') |
+                \            execute "lua require('tabs').set_name(true)" |
+                \        else |
+                \            unlet g:tabs_nvim_no_prompt |
+                \        endif |
                 \    endif
 
     " restore previous session tabpage names
